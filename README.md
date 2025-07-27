@@ -1,2 +1,2 @@
 # delta-demo
-This is demo of gihub class.
+This is demo project of of airbnb web.
