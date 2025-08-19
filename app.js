@@ -35,20 +35,23 @@ app.use(express.static(path.join(__dirname, "/public")));
 
 const dbUrl = process.env.ATLASDB_URL;
 
+// ✅ MongoStore Setup
 const store = MongoStore.create({
     mongoUrl: dbUrl,
-    crypto:{
+    crypto: {
         secret: process.env.SECRET,
     },
-    touchAfter: 24*3600,
+    touchAfter: 24 * 3600,
 });
-store.on("error",()=>{
-   console.log("ERROR IN MONGO SESSION STORE",err);
+
+store.on("error", (err) => {
+    console.log("ERROR IN MONGO SESSION STORE", err);
 });
-// SESSION SETUP
+
+// ✅ Session Setup
 const sessionOptions = {
     store,
-    secret: "SECRET",
+    secret: process.env.SECRET,
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -60,14 +63,14 @@ const sessionOptions = {
 app.use(session(sessionOptions));
 app.use(flash());
 
-// PASSPORT CONFIG
+// ✅ Passport Setup
 app.use(passport.initialize());
 app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-// FLASH & USER TO ALL TEMPLATES
+// ✅ Flash + Current User Middleware
 app.use((req, res, next) => {
     res.locals.successMsg = req.flash("success");
     res.locals.errorMsg = req.flash("error");
@@ -75,32 +78,29 @@ app.use((req, res, next) => {
     next();
 });
 
-
+// ✅ MongoDB Connection (Fixed TLS/SSL issue)
 async function main() {
     try {
-        await mongoose.connect(dbUrl, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        });
-        console.log("✅ Connected to DB");
+        await mongoose.connect(dbUrl);
+                console.log("✅ Connected to MongoDB Atlas");
 
-        // ✅ Routes and server start only after DB is ready
+        // ✅ Routes
         app.use("/listings", listingsRouter);
         app.use("/listings/:id/reviews", reviewsRouter);
         app.use("/", userRouter);
 
-        app.listen("8080", () => {
-            console.log(" Server is running on port 8080");
+        // ✅ Server Start
+        app.listen(8080, () => {
+            console.log("🚀 Server is running on port 8080");
         });
 
     } catch (err) {
-        console.error(" MongoDB connection error:", err.message);
+        console.error("❌ MongoDB connection error:", err.message);
     }
 }
-
 main();
 
-// ERROR HANDLER
+// ✅ Error Handler
 app.use((err, req, res, next) => {
     const { statusCode = 500, message = "Something went wrong!" } = err;
     res.status(statusCode).render("error.ejs", { message });
