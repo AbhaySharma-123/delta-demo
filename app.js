@@ -83,11 +83,15 @@ async function main() {
     try {
         await mongoose.connect(dbUrl);
                 console.log("✅ Connected to MongoDB Atlas");
-
         // ✅ Routes
-        app.use("/listings", listingsRouter);
-        app.use("/listings/:id/reviews", reviewsRouter);
-        app.use("/", userRouter);
+app.use("/listings", listingsRouter);
+app.use("/listings/:id/reviews", reviewsRouter);
+app.use("/", userRouter);
+
+// ✅ Root Route
+app.get("/", (req, res) => {
+    res.redirect("/listings"); 
+});
 
         // ✅ Server Start
         app.listen(8080, () => {
